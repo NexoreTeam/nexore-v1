@@ -10,7 +10,7 @@ export default async function Home() {
   return (
     <main>
       <div className="text-center text-5xl">
-        This is the testing page for Nexore application
+        This is the testing page for Nexore application!
       </div>
     </main>
   );
