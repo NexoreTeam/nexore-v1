@@ -15,21 +15,64 @@ datasource db {
 }
 
 model Post {
-  id        Int      @id @default(autoincrement())
-  name      String
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  content   String?
+  img       String?
   created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  status    String?
+  share_by   String[]
+  is_liked   Boolean?
+  liked_by   String[]
+  hashtagId String[] // Array of hashtag ID
+  comments Comment[]
 
-  created_by_id String
-  created_by   User   @relation(fields: [created_by_id], references: [id])
+  @@index([userId])
+}
 
-  @@index([name])
+model Hashtag {
+  id                String   @id @default(cuid())
+  name              String   @unique
+  post_count         Int?
+  post_per_period Int?
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+}
+
+model Comment {
+  id            String   @id @default(cuid())
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id])
+  postId        String?
+  post          Post?    @relation(fields: [postId], references: [id])
+  content       String?
+  img           String?
+  created_at    DateTime @default(now())
+  parentCmtId   String?
+  parentComment Comment? @relation("CommentReplies", fields: [parentCmtId], references: [id])
+  replies       Comment[] @relation("CommentReplies")
+
+  @@index([userId, postId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  type      String?
+  sourceId  String?
+  content   String?
+  create_at  DateTime @default(now())
+  status    String?
+
+  @@index([userId])
 }
 
 // Necessary for Next auth
 model Account {
   id                    String  @id @default(cuid())
-  userId                String
+  userId                String  @unique
   type                  String
   provider              String
   providerAccountId     String
@@ -60,12 +103,14 @@ model User {
   email         String?   @unique
   email_verified DateTime?
   image         String?
-  accounts      Account[]
+  accounts      Account?
   sessions      Session[]
   posts         Post[]
-  user_info     UserInfo?
+  user_info     UserInfo[]
   user_settings UserSetting? // One-to-one relationship
-  portfolios    Portfolio[]
+  portfolios    Portfolio?
+  comments Comment[]
+  notifications Notification[]
 }
 
 model VerificationToken {
@@ -127,7 +172,7 @@ model SocialLink {
 model Portfolio {
   id          String  @id @default(cuid())
   avt         String?
-  userId      String?
+  userId      String? @unique
   title       String?
   description String?
   created_at  DateTime @default(now())
